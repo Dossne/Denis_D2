@@ -455,11 +455,17 @@ namespace ClawbearGames
         /// <summary>
         /// Register one collected target object and update hole growth by score thresholds.
         /// </summary>
+        /// <param name="objectName"></param>
         /// <param name="objectSize"></param>
         /// <returns>Earned points for this collected object.</returns>
-        public int RegisterCollectedTarget(float objectSize)
+        public int RegisterCollectedTarget(string objectName, float objectSize)
         {
-            int itemTier = HoleProgressionRules.GetItemTierBySize(objectSize, baseHoleDiameter);
+            int itemTier;
+            if (!HoleProgressionRules.TryGetItemTierByObjectName(objectName, out itemTier))
+            {
+                itemTier = HoleProgressionRules.GetItemTierBySize(objectSize, baseHoleDiameter);
+            }
+
             int earnedPoints = HoleProgressionRules.GetPointsForItemTier(itemTier);
             currentHoleScore += earnedPoints;
 

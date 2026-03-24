@@ -21,6 +21,49 @@ namespace ClawbearGames
             0, 10, 20, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
         };
 
+        public static bool TryGetItemTierByObjectName(string objectName, out int itemTier)
+        {
+            itemTier = MinItemTier;
+
+            if (string.IsNullOrEmpty(objectName))
+            {
+                return false;
+            }
+
+            switch (objectName)
+            {
+                case "Ball_17":
+                    itemTier = 1;
+                    return true;
+                case "Ball_14":
+                    itemTier = 2;
+                    return true;
+                case "Ball_15":
+                    itemTier = 3;
+                    return true;
+                case "Ball_10":
+                    itemTier = 4;
+                    return true;
+                case "Ball_18":
+                    itemTier = 5;
+                    return true;
+                case "Ball_16":
+                    itemTier = 6;
+                    return true;
+                case "Ball_7":
+                    itemTier = 7;
+                    return true;
+                case "Ball_12":
+                    itemTier = 8;
+                    return true;
+                case "Ball_11":
+                    itemTier = 9;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public static int GetPointsForItemTier(int itemTier)
         {
             int tierIndex = Mathf.Clamp(itemTier, MinItemTier, MaxItemTier) - 1;

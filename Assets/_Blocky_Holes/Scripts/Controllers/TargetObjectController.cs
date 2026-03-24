@@ -174,7 +174,7 @@ namespace ClawbearGames
 
                     //Update the player
                     ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.TargetObjectDestroyed);
-                    int earnedPoints = PlayerController.Instance.RegisterCollectedTarget(ObjectSize);
+                    int earnedPoints = PlayerController.Instance.RegisterCollectedTarget(ObjectName, ObjectSize);
                     if (EffectManager.Instance != null && PlayerController.Instance != null)
                     {
                         Vector3 holeCenter = PlayerController.Instance.HoleCenterWorldPosition;
