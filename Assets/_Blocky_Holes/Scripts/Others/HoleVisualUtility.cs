@@ -95,6 +95,11 @@ namespace ClawbearGames
 
             holeSpriteRenderer.sprite = GetReferenceHoleSprite();
             holeSpriteRenderer.color = Color.white;
+
+            // Keep the rendering plane height but align sprite center with hole physics center.
+            Transform spriteTransform = holeSpriteRenderer.transform;
+            Vector3 localPosition = spriteTransform.localPosition;
+            spriteTransform.localPosition = new Vector3(0f, localPosition.y, 0f);
         }
 
         public static void ApplyReferenceVisual(Transform root, SpriteRenderer holeSpriteRenderer = null)

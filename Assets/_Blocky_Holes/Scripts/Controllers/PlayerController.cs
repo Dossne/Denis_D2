@@ -168,6 +168,20 @@ namespace ClawbearGames
         }
 
         /// <summary>
+        /// Get the world-space center of the hole for overlap checks.
+        /// </summary>
+        /// <returns></returns>
+        private Vector3 GetHoleCenterWorldPosition()
+        {
+            if (holeSpriteRenderer != null)
+            {
+                return holeSpriteRenderer.transform.position;
+            }
+
+            return transform.position;
+        }
+
+        /// <summary>
         /// Calibrate the base hole diameter to ensure first-tier objects are absorbable.
         /// This should be called right after level objects are spawned.
         /// </summary>
@@ -229,7 +243,8 @@ namespace ClawbearGames
                     //Check for deadly objects and deadly objects
                     listDetectedTarget.Clear();
                     listDetectedDeadly.Clear();
-                    Collider[] delectedColliders = Physics.OverlapSphere(transform.position, targetHoleSize);
+                    Vector3 holeCenterPosition = GetHoleCenterWorldPosition();
+                    Collider[] delectedColliders = Physics.OverlapSphere(holeCenterPosition, targetHoleSize);
                     foreach (Collider collider in delectedColliders)
                     {
                         if (collider.CompareTag("Object"))
