@@ -1,0 +1,350 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace ClawbearGames
+{
+    public class PlayerController : MonoBehaviour
+    {
+
+        public static PlayerController Instance { private set; get; }
+        public static event System.Action<PlayerState> PlayerStateChanged = delegate { };
+
+
+        //[Header("Player Configuration")]
+
+        [Header("Player References")]
+        [SerializeField] private string objectLayer = "Object";
+        [SerializeField] private string defaultLayer = "Default";
+        [SerializeField] private Transform holeParentTrans = null;
+        [SerializeField] private Transform fireEffectTrans = null;
+        [SerializeField] private SpriteRenderer holeSpriteRenderer = null;
+        [SerializeField] private ParticleSystem[] holeFireEffects = null;
+
+
+        public PlayerState PlayerState
+        {
+            get { return playerState; }
+            private set
+            {
+                if (value != playerState)
+                {
+                    value = playerState;
+                    PlayerStateChanged(playerState);
+                }
+            }
+        }
+
+        private PlayerState playerState = PlayerState.Player_Prepare;
+        private List<TargetObjectController> listCurrentTarget = new List<TargetObjectController>();
+        private List<DeadlyObjectController> listCurrentDeadly = new List<DeadlyObjectController>();
+        private List<TargetObjectController> listDetectedTarget = new List<TargetObjectController>();
+        private List<DeadlyObjectController> listDetectedDeadly = new List<DeadlyObjectController>();
+        private Vector3 firstInputPos = Vector3.zero;
+        private float currentHoleSize = 1f;
+        private float targetHoleSize = 1f;
+        private float movementSpeed = 0f;
+        private float currentSpeed = 0f;
+        private bool isStopControl = false;
+
+        private void OnEnable()
+        {
+            IngameManager.IngameStateChanged += IngameManager_IngameStateChanged;
+        }
+        private void OnDisable()
+        {
+            IngameManager.IngameStateChanged -= IngameManager_IngameStateChanged;
+        }
+        private void IngameManager_IngameStateChanged(IngameState obj)
+        {
+            if (obj == IngameState.Ingame_Playing)
+            {
+                PlayerLiving();
+            }
+            else if (obj == IngameState.Ingame_CompleteLevel)
+            {
+                PlayerCompletedLevel();
+            }
+        }
+
+
+
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                DestroyImmediate(Instance.gameObject);
+                Instance = this;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+
+
+
+        private void Start()
+        {
+            //Fire event
+            PlayerState = PlayerState.Player_Prepare;
+            playerState = PlayerState.Player_Prepare;
+
+            //Add other actions here
+
+            //Setup character
+            CharacterInforController charControl = ServicesManager.Instance.CharacterContainer.CharacterInforControllers[ServicesManager.Instance.CharacterContainer.SelectedCharacterIndex];
+            holeSpriteRenderer.sprite = charControl.HoleSprite;
+
+            //Setup parameters and objects
+            isStopControl = true;
+        }
+
+        private void Update()
+        {
+            if (playerState == PlayerState.Player_Living)
+            {
+                if (!isStopControl)
+                {
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        currentSpeed = movementSpeed / 2f;
+                        firstInputPos = new Vector3(Input.mousePosition.x, 0f, Input.mousePosition.y);
+                    }
+                    else if (Input.GetMouseButton(0))
+                    {
+                        //Update the current speed
+                        currentSpeed = Mathf.Clamp(currentSpeed + Time.deltaTime, 0f, movementSpeed);
+
+                        //Calculate the movingDir and move the player 
+                        Vector3 currentInputPos = new Vector3(Input.mousePosition.x, 0f, Input.mousePosition.y);
+                        Vector3 movingDir = (currentInputPos - firstInputPos).normalized;
+                        Vector3 playerPos = transform.position;
+                        playerPos += movingDir * currentSpeed * Time.deltaTime;
+                        transform.position = playerPos;
+                    }
+                    else if (Input.GetMouseButtonUp(0))
+                    {
+                        currentSpeed = movementSpeed / 2f;
+                        firstInputPos = Vector3.zero;
+                    }
+
+
+                    //Check for deadly objects and deadly objects
+                    listDetectedTarget.Clear();
+                    listDetectedDeadly.Clear();
+                    Collider[] delectedColliders = Physics.OverlapSphere(transform.position, targetHoleSize);
+                    foreach (Collider collider in delectedColliders)
+                    {
+                        if (collider.CompareTag("Object"))
+                        {
+                            TargetObjectController targetObject = PoolManager.Instance.FindTargetObject(collider.transform);
+                            if (targetObject != null && !listDetectedTarget.Contains(targetObject))
+                            {
+                                listDetectedTarget.Add(targetObject);
+                                targetObject.OnEnterPlayer(objectLayer);
+                                if (!listCurrentTarget.Contains(targetObject)) { listCurrentTarget.Add(targetObject); }
+                            }
+
+                            DeadlyObjectController deadlyObject = PoolManager.Instance.FindDeadlyObject(collider.transform);
+                            if(deadlyObject != null && !listDetectedDeadly.Contains(deadlyObject))
+                            {
+                                listDetectedDeadly.Add(deadlyObject);
+                                deadlyObject.OnEnterPlayer(objectLayer);
+                                if (!listCurrentDeadly.Contains(deadlyObject)) { listCurrentDeadly.Add(deadlyObject); }
+                            }
+                        }
+                    }
+
+                    //Target objects fall out of the hole -> re-set to default layer
+                    foreach (TargetObjectController target in listCurrentTarget)
+                    {
+                        if (!listDetectedTarget.Contains(target))
+                        {
+                            target.OnExitPlayer(defaultLayer);
+                        }
+                    }
+
+                    //deadly objects fall out of the hole -> re-set to default layer
+                    foreach (DeadlyObjectController deadly in listCurrentDeadly)
+                    {
+                        if (!listDetectedDeadly.Contains(deadly))
+                        {
+                            deadly.OnExitPlayer(defaultLayer);
+                        }
+                    }
+
+                    //Update hole size based on targetHoleSize
+                    currentHoleSize = holeParentTrans.localScale.x;
+                    if (currentHoleSize != targetHoleSize)
+                    {
+                        currentHoleSize = Mathf.Clamp(currentHoleSize + Time.deltaTime, 1f, targetHoleSize);
+                        holeParentTrans.localScale = new Vector3(currentHoleSize, 1f, currentHoleSize);
+                        CameraParentController.Instance.UpdateDistance(currentHoleSize);
+                    }
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// Call PlayerState.Player_Living event and handle other actions.
+        /// </summary>
+        private void PlayerLiving()
+        {
+            //Fire event
+            PlayerState = PlayerState.Player_Living;
+            playerState = PlayerState.Player_Living;
+
+            //Add other actions here
+            if (IngameManager.Instance.IsRevived)
+            {
+                StartCoroutine(CRHandleActionsAfterRevived());
+            }
+            else
+            {
+                isStopControl = false;
+            }
+        }
+
+
+        /// <summary>
+        /// Call PlayerState.Player_Died event and handle other actions.
+        /// </summary>
+        public void PlayerDied()
+        {
+            //Fire event
+            PlayerState = PlayerState.Player_Died;
+            playerState = PlayerState.Player_Died;
+
+            //Add other actions here
+            ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.PlayerDied);
+            ServicesManager.Instance.ShareManager.CreateScreenshot();
+            CameraParentController.Instance.Shake();
+            isStopControl = true;
+        }
+
+
+
+        /// <summary>
+        /// Fire Player_CompletedLevel event and handle other actions.
+        /// </summary>
+        private void PlayerCompletedLevel()
+        {
+            //Fire event
+            PlayerState = PlayerState.Player_CompletedLevel;
+            playerState = PlayerState.Player_CompletedLevel;
+
+            //Add others action here
+            ServicesManager.Instance.ShareManager.CreateScreenshot();
+        }
+
+
+        /// <summary>
+        /// Coroutine handle actions after player revived.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator CRHandleActionsAfterRevived()
+        {
+            yield return new WaitForSeconds(0.5f);
+            isStopControl = false;
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////Public functions
+
+
+
+        /// <summary>
+        /// Set the movement speed for the player.
+        /// </summary>
+        /// <param name="speed"></param>
+        public void SetMovementSpeed(float speed)
+        {
+            movementSpeed = speed;
+        }
+
+
+
+        /// <summary>
+        /// Update the size of the hole with amount. 
+        /// </summary>
+        /// <param name="amount"></param>
+        public void UpdateHoleSize(float amount)
+        {
+            targetHoleSize = Mathf.Clamp(targetHoleSize + amount, 1f, 100f);
+
+            for(int i = 0; i < holeFireEffects.Length; i++)
+            {
+                //Adjust lifetime
+                var main = holeFireEffects[i].main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(targetHoleSize / 2f, targetHoleSize);
+
+                //Adjust redius
+                var shape = holeFireEffects[i].shape;
+                shape.radius = targetHoleSize * 0.6f;
+
+                //Adjust emission count
+                var parEmission = holeFireEffects[i].emission;
+                parEmission.rateOverTime = Mathf.RoundToInt(targetHoleSize * 30f);
+
+                //Adjust size
+                if (i == 0)
+                {
+                    main.startSize3D = true;
+                    main.startSizeX = targetHoleSize * 3f;
+                    main.startSizeY = targetHoleSize * 3f;
+                    main.startSizeZ = targetHoleSize * 4f;
+                }
+                else if (i == 1)
+                {
+                    main.startSize = targetHoleSize * 0.1f;
+                }
+                else
+                {
+                    main.startSize = new ParticleSystem.MinMaxCurve(targetHoleSize, targetHoleSize * 3f);
+                }
+            }
+
+            float newY = -(targetHoleSize * 1.8f);
+            fireEffectTrans.localPosition = new Vector3(fireEffectTrans.localPosition.x, newY, fireEffectTrans.localPosition.z);
+
+            //Create effect
+            EffectManager.Instance.CreateTargetObjectExplode(transform.position + Vector3.up * 0.15f, currentHoleSize);
+        }
+
+
+
+        /// <summary>
+        /// Handle actions when the player collected a deadly object.
+        /// </summary>
+        public void OnCollectedDeadlyObject()
+        {
+            isStopControl = true;
+            PlayerDied();
+            IngameManager.Instance.HandlePlayerDied();
+        }
+
+
+
+        /// <summary>
+        /// Create the cash effect with amount.
+        /// </summary>
+        /// <param name="amount"></param>
+        public void CreateCashEffect(int amount)
+        {
+            EffectManager.Instance.CreateCashEffect(transform.position + Vector3.down * 0.5f, amount);
+        }
+    }
+}
