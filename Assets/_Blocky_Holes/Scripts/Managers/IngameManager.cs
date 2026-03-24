@@ -271,21 +271,7 @@ namespace ClawbearGames
         /// </summary>
         public void HandlePlayerDied()
         {
-            if (IsRevived || !ServicesManager.Instance.AdManager.IsRewardedAdReady())
-            {
-                //Fire event
-                IngameState = IngameState.Ingame_GameOver;
-                ingameState = IngameState.Ingame_GameOver;
-
-                //Add another actions here
-                StartCoroutine(CRShowViewWithDelay(ViewType.ENDGAME_VIEW, 1f));
-                ServicesManager.Instance.SoundManager.StopMusic(0.5f);
-                ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.LevelFailed);
-            }
-            else
-            {
-                Revive();
-            }
+            GameOver();
         }
 
 
