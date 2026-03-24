@@ -48,6 +48,9 @@ namespace ClawbearGames
         private float currentSpeed = 0f;
         private bool isStopControl = false;
 
+        private const string objectFallbackLayerName = "Ignore Raycast";
+        private const string defaultFallbackLayerName = "Default";
+
         private void OnEnable()
         {
             IngameManager.IngameStateChanged += IngameManager_IngameStateChanged;
@@ -100,6 +103,19 @@ namespace ClawbearGames
             PlayerState = PlayerState.Player_Prepare;
             playerState = PlayerState.Player_Prepare;
 
+            //Normalize configured layer names to prevent invalid runtime layer assignment.
+            objectLayer = ResolveLayerName(objectLayer, objectFallbackLayerName);
+            defaultLayer = ResolveLayerName(defaultLayer, defaultFallbackLayerName);
+
+            //Make sure pulled objects can pass through the ground and fall into the hole.
+            int objectLayerIndex = LayerMask.NameToLayer(objectLayer);
+            GameObject groundObject = GameObject.Find("Ground");
+            if (groundObject != null && objectLayerIndex >= 0)
+            {
+                int groundLayerIndex = groundObject.layer;
+                Physics.IgnoreLayerCollision(objectLayerIndex, groundLayerIndex, true);
+            }
+
             //Add other actions here
 
             //Setup character
@@ -108,6 +124,27 @@ namespace ClawbearGames
 
             //Setup parameters and objects
             isStopControl = true;
+        }
+
+        /// <summary>
+        /// Resolve a layer name and fallback when the layer does not exist.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="fallbackName"></param>
+        /// <returns></returns>
+        private string ResolveLayerName(string layerName, string fallbackName)
+        {
+            if (LayerMask.NameToLayer(layerName) >= 0)
+            {
+                return layerName;
+            }
+
+            if (LayerMask.NameToLayer(fallbackName) >= 0)
+            {
+                return fallbackName;
+            }
+
+            return layerName;
         }
 
         private void Update()

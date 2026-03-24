@@ -5,6 +5,9 @@ namespace ClawbearGames
 {
     public class TargetObjectController : MonoBehaviour
     {
+        private const string enterFallbackLayerName = "Ignore Raycast";
+        private const string exitFallbackLayerName = "Default";
+
         [Header("Target Object Configuration")]
         [SerializeField] private float radiusIncreaseAmount = 0.1f;
         [SerializeField][Range(1, 50)] private int minCashRewardAmount = 1;
@@ -36,7 +39,7 @@ namespace ClawbearGames
         /// <param name="objectLayer"></param>
         public void OnEnterPlayer(string objectLayer)
         {
-            gameObject.layer = LayerMask.NameToLayer(objectLayer);
+            SetLayerSafe(objectLayer, enterFallbackLayerName);
             rigidbody3D.WakeUp();
 
             if (physicsPullCount < 15 || transform.position.y > -0.1)
@@ -69,7 +72,28 @@ namespace ClawbearGames
         {
             cRCheckFall = null;
             physicsPullCount = 0;
-            gameObject.layer = LayerMask.NameToLayer(defaultLayer);
+            SetLayerSafe(defaultLayer, exitFallbackLayerName);
+        }
+
+        /// <summary>
+        /// Safely set layer by name and fallback to Default if needed.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="fallbackLayerName"></param>
+        private void SetLayerSafe(string layerName, string fallbackLayerName)
+        {
+            int layerIndex = LayerMask.NameToLayer(layerName);
+            if (layerIndex >= 0)
+            {
+                gameObject.layer = layerIndex;
+                return;
+            }
+
+            int fallbackLayerIndex = LayerMask.NameToLayer(fallbackLayerName);
+            if (fallbackLayerIndex >= 0)
+            {
+                gameObject.layer = fallbackLayerIndex;
+            }
         }
 
 

@@ -9,6 +9,8 @@ namespace ClawbearGames
     {
         public static IngameManager Instance { private set; get; }
         public static event System.Action<IngameState> IngameStateChanged = delegate { };
+        private const int SingleLevelNumber = 1;
+        private const int SingleLevelTimeSeconds = 240;
 
 
         [Header("Enter a number of level to test. Set back to 0 to disable this feature.")]
@@ -79,17 +81,21 @@ namespace ClawbearGames
             confettiEffects[0].transform.parent.gameObject.SetActive(false);
 
             //Load level parameters
-            CurrentLevel = (testingLevel != 0) ? testingLevel : PlayerDataHandler.GetCurrentLevel();
+            CurrentLevel = SingleLevelNumber;
+            if (testingLevel == 0 && PlayerDataHandler.GetCurrentLevel() != SingleLevelNumber)
+            {
+                PlayerDataHandler.UpdateCurrentLevel(SingleLevelNumber);
+            }
 
             TextAsset textAsset = Resources.Load<TextAsset>("Levels/" + CurrentLevel.ToString());
             levelData = JsonUtility.FromJson<LevelData>(textAsset.ToString());
 
-            // MVP pacing: keep the first level short and readable for core-loop validation.
-            if (CurrentLevel == 1)
+            // MVP uses only level 1 for repeatable core-loop checks.
+            if (CurrentLevel == SingleLevelNumber)
             {
                 levelData.TargetObjectAmount = Mathf.Min(levelData.TargetObjectAmount, 30);
-                levelData.TimeToCompleteLevel = 90;
             }
+            levelData.TimeToCompleteLevel = SingleLevelTimeSeconds;
 
             //Load other parameters
             groundMaterial.SetTexture("_Main_Texture", PoolManager.Instance.GetGroundTexture(levelData.GroundTexture));
@@ -206,9 +212,7 @@ namespace ClawbearGames
             //Save level
             if (testingLevel == 0)
             {
-                int totalLevel = Resources.LoadAll("Levels/").Length;
-                int nextLevel = ((CurrentLevel + 1) > totalLevel) ? totalLevel : (CurrentLevel + 1);
-                PlayerDataHandler.UpdateCurrentLevel(nextLevel);
+                PlayerDataHandler.UpdateCurrentLevel(SingleLevelNumber);
 
                 //Report level to leaderboard
                 if (!string.IsNullOrEmpty(PlayerDataHandler.GetUserName()))

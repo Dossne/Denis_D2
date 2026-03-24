@@ -21,7 +21,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Ground
-  m_Shader: {fileID: -6465566751694194690, guid: 70421a240a53fef46a1c5c163e004cf9, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 70421a240a53fef46a1c5c163e004cf9,
+    type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -62,7 +63,7 @@ Material:
         m_Scale: {x: 50, y: 50}
         m_Offset: {x: 0, y: 0}
     - _Main_Texture:
-        m_Texture: {fileID: 2800000, guid: f80efd4e034774b468bac4346c2892a2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 49730d9f5d504d34db6fdcee95709389, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -115,4 +116,3 @@ Material:
     - _Main_Color: {r: 0.82641506, g: 0.82641506, b: 0.82641506, a: 1}
     - _Tiling: {r: 50, g: 50, b: 0, a: 0}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1

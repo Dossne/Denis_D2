@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-#if UNITY_ANDROID
+#if CB_NOTIFICATIONS && UNITY_ANDROID
 using Unity.Notifications.Android;
 #endif
-#if UNITY_IOS
+#if CB_NOTIFICATIONS && UNITY_IOS
 using Unity.Notifications.iOS;
 #endif
 
@@ -13,7 +13,7 @@ namespace ClawbearGames
 
     public class NotificationManager : MonoBehaviour
     {
-#if UNITY_ANDROID || UNITY_IOS
+#if CB_NOTIFICATIONS && (UNITY_ANDROID || UNITY_IOS)
         [Header("Daily Notification Configuration")]
         [SerializeField] private string dailyNotificationTitle = "Hey. What's up !!!";
         [SerializeField] private string dailyNotificationText = "Come back. There are new levels !!!";
@@ -27,13 +27,13 @@ namespace ClawbearGames
         private string dailyRewardNotificationChanelID = "reward_coins_notification_chanel_id";
 #endif
 
-#if UNITY_IOS
+#if CB_NOTIFICATIONS && UNITY_IOS
         private bool isNotificationRequestDone = false;
 #endif
 
         private void Start()
         {
-#if UNITY_ANDROID
+#if CB_NOTIFICATIONS && UNITY_ANDROID
 
             //Remove notifications that already been displayed.
             AndroidNotificationCenter.CancelAllDisplayedNotifications();
@@ -58,7 +58,7 @@ namespace ClawbearGames
             };
             AndroidNotificationCenter.RegisterNotificationChannel(rewardCoinsNotificationChannel);
 
-#elif UNITY_IOS
+#elif CB_NOTIFICATIONS && UNITY_IOS
 
             //Reset parameters
             isNotificationRequestDone = false;
@@ -73,7 +73,7 @@ namespace ClawbearGames
         }
 
 
-#if UNITY_IOS
+#if CB_NOTIFICATIONS && UNITY_IOS
         private IEnumerator CRRequestingIOSNotification()
         {
             //Request notification rights from iOS devices
@@ -93,7 +93,7 @@ namespace ClawbearGames
         {
             if (pause)
             {
-#if UNITY_ANDROID
+#if CB_NOTIFICATIONS && UNITY_ANDROID
 
                 //Cancel all the scheduled and displayed notifications
                 AndroidNotificationCenter.CancelAllDisplayedNotifications();
@@ -118,7 +118,7 @@ namespace ClawbearGames
                 androidDailyRewardNotification.FireTime = DateTime.Now.AddSeconds(Mathf.Clamp(ServicesManager.Instance.DailyRewardManager.TimeRemainsTillNextReward(), 30, 86400));
                 AndroidNotificationCenter.SendNotification(androidDailyRewardNotification, dailyRewardNotificationChanelID);
 
-#elif UNITY_IOS
+#elif CB_NOTIFICATIONS && UNITY_IOS
 
                 if (isNotificationRequestDone)
                 {

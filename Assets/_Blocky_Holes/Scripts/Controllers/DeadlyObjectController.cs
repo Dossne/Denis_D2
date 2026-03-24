@@ -6,6 +6,9 @@ namespace ClawbearGames
 {
     public class DeadlyObjectController : MonoBehaviour
     {
+        private const string enterFallbackLayerName = "Ignore Raycast";
+        private const string exitFallbackLayerName = "Default";
+
         [Header("Deadly Object References")]
         [SerializeField] private string objectName = string.Empty;
         [SerializeField] private Rigidbody rigidbody3D = null;
@@ -32,7 +35,7 @@ namespace ClawbearGames
         /// <param name="objectLayer"></param>
         public void OnEnterPlayer(string objectLayer)
         {
-            gameObject.layer = LayerMask.NameToLayer(objectLayer);
+            SetLayerSafe(objectLayer, enterFallbackLayerName);
             rigidbody3D.WakeUp();
 
             if (physicsPullCount < 5)
@@ -61,7 +64,28 @@ namespace ClawbearGames
         {
             cRCheckFall = null;
             physicsPullCount = 0;
-            gameObject.layer = LayerMask.NameToLayer(defaultLayer);
+            SetLayerSafe(defaultLayer, exitFallbackLayerName);
+        }
+
+        /// <summary>
+        /// Safely set layer by name and fallback to Default if needed.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="fallbackLayerName"></param>
+        private void SetLayerSafe(string layerName, string fallbackLayerName)
+        {
+            int layerIndex = LayerMask.NameToLayer(layerName);
+            if (layerIndex >= 0)
+            {
+                gameObject.layer = layerIndex;
+                return;
+            }
+
+            int fallbackLayerIndex = LayerMask.NameToLayer(fallbackLayerName);
+            if (fallbackLayerIndex >= 0)
+            {
+                gameObject.layer = fallbackLayerIndex;
+            }
         }
 
 
