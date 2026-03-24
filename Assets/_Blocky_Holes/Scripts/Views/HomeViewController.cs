@@ -85,6 +85,15 @@ namespace ClawbearGames
             settingButtonTurn = 1;
             currentLevelText.text = "LEVEL: " + PlayerDataHandler.GetCurrentLevel().ToString();
 
+            // MVP: keep Home focused on Play only.
+            shareButtonTrans.gameObject.SetActive(false);
+            leaderboardButtonTrans.gameObject.SetActive(false);
+            rateAppButtonTrans.gameObject.SetActive(false);
+            removeAdsButtonTrans.gameObject.SetActive(false);
+            soundButtonsTrans.gameObject.SetActive(false);
+            musicButtonsTrans.gameObject.SetActive(false);
+            warningSignTrans.gameObject.SetActive(false);
+
             //Update sound buttons
             if (PlayerDataHandler.IsSoundOff())
             {
@@ -111,15 +120,7 @@ namespace ClawbearGames
 
 
             //Handle warning sign
-            if (ServicesManager.Instance.AdManager.IsRewardedAdReady())
-            {
-                warningSignTrans.gameObject.SetActive(true);
-            }
-            else
-            {
-                int timeRemains = ServicesManager.Instance.DailyRewardManager.TimeRemainsTillNextReward();
-                warningSignTrans.gameObject.SetActive((timeRemains == 0) ? true : false);
-            }
+            warningSignTrans.gameObject.SetActive(false);
         }
 
 
@@ -155,27 +156,22 @@ namespace ClawbearGames
         public void OnClickRewardButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ViewManager.Instance.OnShowView(ViewType.DAILY_REWARD_VIEW);
         }
 
 
         public void OnClickCharacterButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            LoadScene("Character", 0.25f);
         }
 
         public void OnClickSettingButton()
         {
-            settingButtonTurn *= -1;
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            StartCoroutine(CROnClickSettingButton());
         }
 
         public void OnClickShareButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ServicesManager.Instance.ShareManager.NativeShare();
         }
 
         public void OnClickSoundButton()
@@ -215,13 +211,11 @@ namespace ClawbearGames
         public void OnClickLeaderboardButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ViewManager.Instance.OnShowView(ViewType.LEADERBOARD_VIEW);
         }
 
         public void OnClickRateAppButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            Application.OpenURL(ServicesManager.Instance.ShareManager.AppUrl);
         }
         public void OnClickRemoveAdsButton()
         {

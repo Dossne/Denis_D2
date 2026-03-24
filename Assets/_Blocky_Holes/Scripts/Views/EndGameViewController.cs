@@ -75,18 +75,9 @@ namespace ClawbearGames
             }
 
 
-            //Setup collected coins panel
-            if (ServicesManager.Instance.CoinManager.CollectedCoins > 0)
-            {
-                collectedCoinsCanvasGroup.gameObject.SetActive(true);
-                FadeInCanvasGroup(collectedCoinsCanvasGroup, 0.5f, 0.75f);
-                doubleCoinButtonTrans.gameObject.SetActive(ServicesManager.Instance.AdManager.IsRewardedAdReady());
-                StartCoroutine(CRRotateSunbrustImage());
-            }
-            else
-            {
-                collectedCoinsCanvasGroup.gameObject.SetActive(false);
-            }
+            // MVP: no ad-driven reward branch on endgame screen.
+            collectedCoinsCanvasGroup.gameObject.SetActive(false);
+            doubleCoinButtonTrans.gameObject.SetActive(false);
 
 
 
@@ -113,15 +104,11 @@ namespace ClawbearGames
         public void OnClickClaimButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ServicesManager.Instance.CoinManager.AddTotalCoins(ServicesManager.Instance.CoinManager.CollectedCoins, 0.25f);
-            collectedCoinsCanvasGroup.gameObject.SetActive(false);
         }
 
         public void OnClickDoubleCoinButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ServicesManager.Instance.AdManager.ShowRewardedAd(RewardedAdTarget.GET_DOUBLE_COIN);
-            doubleCoinButtonTrans.gameObject.SetActive(false);
         }
 
         public void OnClickPlayButton()
@@ -133,19 +120,16 @@ namespace ClawbearGames
         public void OnClickShareButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            ServicesManager.Instance.ShareManager.NativeShare();
         }
 
         public void OnClickCharacterButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            LoadScene("Character", 0.25f);
         }
 
         public void OnClickHomeButton()
         {
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.Button);
-            LoadScene("Home", 0.25f);
         }
     }
 }
