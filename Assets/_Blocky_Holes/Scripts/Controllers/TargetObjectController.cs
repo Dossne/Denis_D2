@@ -30,6 +30,21 @@ namespace ClawbearGames
         }
         private Coroutine cRCheckFall = null;
         private int physicsPullCount = 0;
+        private bool isBeingConsumed = false;
+
+        private void OnEnable()
+        {
+            cRCheckFall = null;
+            physicsPullCount = 0;
+            isBeingConsumed = false;
+
+            if (rigidbody3D != null)
+            {
+                rigidbody3D.detectCollisions = true;
+            }
+
+            SetLayerSafe(exitFallbackLayerName, exitFallbackLayerName);
+        }
 
 
         /// <summary>
@@ -38,7 +53,9 @@ namespace ClawbearGames
         /// <param name="objectLayer"></param>
         public void OnEnterPlayer(string objectLayer)
         {
+            isBeingConsumed = true;
             SetLayerSafe(objectLayer, enterFallbackLayerName);
+            rigidbody3D.detectCollisions = false;
             rigidbody3D.WakeUp();
 
             if (physicsPullCount < 15 || transform.position.y > -0.1)
@@ -69,8 +86,14 @@ namespace ClawbearGames
         /// <param name="defaultLayer"></param>
         public void OnExitPlayer(string defaultLayer)
         {
+            if (isBeingConsumed)
+            {
+                return;
+            }
+
             cRCheckFall = null;
             physicsPullCount = 0;
+            rigidbody3D.detectCollisions = true;
             SetLayerSafe(defaultLayer, exitFallbackLayerName);
         }
 
@@ -108,6 +131,7 @@ namespace ClawbearGames
                 if (transform.position.y <= -3f) 
                 {
                     cRCheckFall = null;
+                    isBeingConsumed = false;
 
                     //Update the player
                     ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.TargetObjectDestroyed);
@@ -123,6 +147,8 @@ namespace ClawbearGames
                     }
 
                     physicsPullCount = 0;
+                    rigidbody3D.detectCollisions = true;
+                    SetLayerSafe(exitFallbackLayerName, exitFallbackLayerName);
                     gameObject.SetActive(false); 
                 }
                 yield return null;
