@@ -31,6 +31,13 @@ namespace ClawbearGames
         private Coroutine cRCheckFall = null;
         private int physicsPullCount = 0;
         private bool isBeingConsumed = false;
+        private Vector3 basePrefabScale = Vector3.one;
+        private bool isBasePrefabScaleCached = false;
+
+        private void Awake()
+        {
+            CacheBasePrefabScale();
+        }
 
         private void OnEnable()
         {
@@ -44,6 +51,27 @@ namespace ClawbearGames
             }
 
             SetLayerSafe(exitFallbackLayerName, exitFallbackLayerName);
+        }
+
+        /// <summary>
+        /// Apply spawn scale as prefab base scale multiplied by level data scale.
+        /// </summary>
+        /// <param name="levelScale"></param>
+        public void ApplySpawnScale(Vector3 levelScale)
+        {
+            CacheBasePrefabScale();
+            transform.localScale = Vector3.Scale(basePrefabScale, levelScale);
+        }
+
+        private void CacheBasePrefabScale()
+        {
+            if (isBasePrefabScaleCached)
+            {
+                return;
+            }
+
+            basePrefabScale = transform.localScale;
+            isBasePrefabScaleCached = true;
         }
 
 

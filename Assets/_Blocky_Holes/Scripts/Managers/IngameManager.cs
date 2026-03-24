@@ -134,7 +134,7 @@ namespace ClawbearGames
                     TargetObjectController targetObject = PoolManager.Instance.GetTargetObjectController(objectData.ObjectName);
                     targetObject.transform.position = objectData.Position;
                     targetObject.transform.eulerAngles = objectData.Angles;
-                    targetObject.transform.localScale = objectData.Scale;
+                    targetObject.ApplySpawnScale(objectData.Scale);
                     targetObject.gameObject.SetActive(true);
                     ViewManager.Instance.IngameViewController.CreateTargetObjectDot(targetObject);
                     minTargetObjectSize = Mathf.Min(minTargetObjectSize, targetObject.ObjectSize);
