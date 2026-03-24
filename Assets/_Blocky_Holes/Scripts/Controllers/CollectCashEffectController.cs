@@ -9,6 +9,61 @@ namespace ClawbearGames
         [SerializeField] private Text cashText = null;
         [SerializeField] private CanvasGroup canvasGroup = null;
         private int cashAmount = 0;
+        private GameObject cashIconObject = null;
+        private Coroutine moveCoroutine = null;
+
+        private void Awake()
+        {
+            CacheCashIcon();
+        }
+
+        private void OnEnable()
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+        }
+
+        private void CacheCashIcon()
+        {
+            if (cashIconObject != null || cashText == null)
+            {
+                return;
+            }
+
+            Transform iconTransform = cashText.transform.Find("Image");
+            if (iconTransform != null)
+            {
+                cashIconObject = iconTransform.gameObject;
+            }
+        }
+
+        private void BeginEffect(int amount, bool showCashIcon)
+        {
+            cashAmount = amount;
+            if (cashText != null)
+            {
+                cashText.text = "+" + amount.ToString();
+            }
+
+            CacheCashIcon();
+            if (cashIconObject != null)
+            {
+                cashIconObject.SetActive(showCashIcon);
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+
+            if (moveCoroutine != null)
+            {
+                StopCoroutine(moveCoroutine);
+            }
+            moveCoroutine = StartCoroutine(CRMoveUp());
+        }
 
 
 
@@ -18,11 +73,18 @@ namespace ClawbearGames
         /// <param name="amount"></param>
         public void OnInit(int amount)
         {
-            cashAmount = amount;
-            cashText.text = "+" + amount.ToString();
-            StartCoroutine(CRMoveUp());
+            BeginEffect(amount, true);
             ServicesManager.Instance.CoinManager.AddCollectedCoins(amount, 0f);
             ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.CashCollected);
+        }
+
+        /// <summary>
+        /// Init this floating effect in score mode (no coin side effects).
+        /// </summary>
+        /// <param name="amount"></param>
+        public void OnInitScore(int amount)
+        {
+            BeginEffect(amount, false);
         }
 
 
@@ -47,7 +109,11 @@ namespace ClawbearGames
                 yield return null;
             }
 
-            canvasGroup.alpha = 1f;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+            moveCoroutine = null;
             gameObject.SetActive(false);
         }
     }

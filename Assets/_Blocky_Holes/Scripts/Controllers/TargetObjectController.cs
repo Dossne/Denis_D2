@@ -174,7 +174,16 @@ namespace ClawbearGames
 
                     //Update the player
                     ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.TargetObjectDestroyed);
-                    PlayerController.Instance.RegisterCollectedTarget(ObjectSize);
+                    int earnedPoints = PlayerController.Instance.RegisterCollectedTarget(ObjectSize);
+                    if (EffectManager.Instance != null && PlayerController.Instance != null)
+                    {
+                        Vector3 holeCenter = PlayerController.Instance.HoleCenterWorldPosition;
+                        Vector3 scorePopupOffset = new Vector3(
+                            Random.Range(-0.45f, 0.45f),
+                            0.6f,
+                            Random.Range(-0.25f, 0.25f));
+                        EffectManager.Instance.CreateScoreEffect(holeCenter + scorePopupOffset, earnedPoints);
+                    }
                     ViewManager.Instance.IngameViewController.RemoveTargetObjectDot(this);
                     IngameManager.Instance.OnPlayerAteTargetObject();
 

@@ -95,7 +95,27 @@ namespace ClawbearGames
         /// <param name="cashAmount"></param>
         public void CreateCashEffect(Vector3 pos, int cashAmount)
         {
-            //Find in the list
+            CollectCashEffectController cashEffect = GetCashEffect(pos);
+            cashEffect.transform.position = pos;
+            cashEffect.gameObject.SetActive(true);
+            cashEffect.OnInit(cashAmount);
+        }
+
+        /// <summary>
+        /// Create a score effect at given position and amount.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="scoreAmount"></param>
+        public void CreateScoreEffect(Vector3 pos, int scoreAmount)
+        {
+            CollectCashEffectController scoreEffect = GetCashEffect(pos);
+            scoreEffect.transform.position = pos;
+            scoreEffect.gameObject.SetActive(true);
+            scoreEffect.OnInitScore(scoreAmount);
+        }
+
+        private CollectCashEffectController GetCashEffect(Vector3 pos)
+        {
             CollectCashEffectController cashEffect = listCashEffectController.Where(a => !a.gameObject.activeSelf).FirstOrDefault();
 
             if (cashEffect == null)
@@ -106,9 +126,7 @@ namespace ClawbearGames
                 listCashEffectController.Add(cashEffect);
             }
 
-            cashEffect.transform.position = pos;
-            cashEffect.gameObject.SetActive(true);
-            cashEffect.OnInit(cashAmount);
+            return cashEffect;
         }
     }
 }
