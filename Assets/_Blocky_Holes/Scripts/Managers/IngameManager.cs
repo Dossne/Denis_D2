@@ -93,7 +93,7 @@ namespace ClawbearGames
             // MVP uses only level 1 for repeatable core-loop checks.
             if (CurrentLevel == SingleLevelNumber)
             {
-                levelData.TargetObjectAmount = Mathf.Min(levelData.TargetObjectAmount, 30);
+                levelData.TargetObjectAmount = Mathf.Min(levelData.TargetObjectAmount, 60);
             }
             levelData.TimeToCompleteLevel = SingleLevelTimeSeconds;
 
