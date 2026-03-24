@@ -8,6 +8,7 @@ namespace ClawbearGames
     {
         private const string runtimeTitleObjectName = "RuntimeTitleText";
         private const string runtimeTitleTextValue = "Bomb Jumping";
+        private const float runtimeTitleScaleMultiplier = 8f;
 
         [SerializeField] private RectTransform topPanelTrans = null;
         [SerializeField] private RectTransform bottomPanelTrans = null;
@@ -119,6 +120,7 @@ namespace ClawbearGames
 
             ApplyRuntimeTitleStyle(runtimeTitleText);
             runtimeTitleText.text = runtimeTitleTextValue;
+            runtimeTitleText.rectTransform.localScale = new Vector3(runtimeTitleScaleMultiplier, runtimeTitleScaleMultiplier, 1f);
 
             Outline runtimeTitleOutline = runtimeTitleText.GetComponent<Outline>();
             if (runtimeTitleOutline == null)
