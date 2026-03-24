@@ -6,11 +6,6 @@ namespace ClawbearGames
 {
     public class HomeViewController : BaseViewController
     {
-        private const string runtimeTitleObjectName = "RuntimeTitleText";
-        private const string runtimeTitleTextValue = "Bomb Jumping";
-        private const float runtimeTitleScaleMultiplier = 8f;
-        private const float runtimeTitleTopOffset = -90f;
-
         [SerializeField] private RectTransform topPanelTrans = null;
         [SerializeField] private RectTransform bottomPanelTrans = null;
         [SerializeField] private RectTransform gameNameTrans = null;
@@ -29,7 +24,6 @@ namespace ClawbearGames
         [SerializeField] private Text currentLevelText = null;
         [SerializeField] private Text totalCoinsText = null;
 
-        private Text runtimeTitleText = null;
         private int settingButtonTurn = 1;
 
         private void Update()
@@ -76,98 +70,6 @@ namespace ClawbearGames
             }
         }
 
-        private void EnsureRuntimeTitle()
-        {
-            if (gameNameTrans == null)
-            {
-                return;
-            }
-
-            Image gameNameImage = gameNameTrans.GetComponent<Image>();
-            if (gameNameImage != null)
-            {
-                gameNameImage.enabled = false;
-            }
-
-            if (runtimeTitleText == null)
-            {
-                Transform existingTitleTransform = gameNameTrans.Find(runtimeTitleObjectName);
-                if (existingTitleTransform != null)
-                {
-                    runtimeTitleText = existingTitleTransform.GetComponent<Text>();
-                }
-
-                if (runtimeTitleText == null)
-                {
-                    GameObject runtimeTitleObject = new GameObject(runtimeTitleObjectName, typeof(RectTransform));
-                    runtimeTitleObject.transform.SetParent(gameNameTrans, false);
-
-                    RectTransform createdRuntimeTitleRect = runtimeTitleObject.GetComponent<RectTransform>();
-                    createdRuntimeTitleRect.anchorMin = Vector2.zero;
-                    createdRuntimeTitleRect.anchorMax = Vector2.one;
-                    createdRuntimeTitleRect.offsetMin = Vector2.zero;
-                    createdRuntimeTitleRect.offsetMax = Vector2.zero;
-                    createdRuntimeTitleRect.localScale = Vector3.one;
-                    createdRuntimeTitleRect.localPosition = Vector3.zero;
-
-                    runtimeTitleText = runtimeTitleObject.AddComponent<Text>();
-                }
-            }
-
-            if (runtimeTitleText == null)
-            {
-                return;
-            }
-
-            ApplyRuntimeTitleStyle(runtimeTitleText);
-            runtimeTitleText.text = runtimeTitleTextValue;
-            RectTransform runtimeTitleRect = runtimeTitleText.rectTransform;
-            float rectWidth = gameNameTrans.rect.width > 0f ? gameNameTrans.rect.width : 1024f;
-            float rectHeight = gameNameTrans.rect.height > 0f ? gameNameTrans.rect.height : 256f;
-            runtimeTitleRect.anchorMin = new Vector2(0.5f, 1f);
-            runtimeTitleRect.anchorMax = new Vector2(0.5f, 1f);
-            runtimeTitleRect.pivot = new Vector2(0.5f, 1f);
-            runtimeTitleRect.sizeDelta = new Vector2(rectWidth, rectHeight);
-            runtimeTitleRect.anchoredPosition = new Vector2(0f, runtimeTitleTopOffset);
-            runtimeTitleRect.localScale = new Vector3(runtimeTitleScaleMultiplier, runtimeTitleScaleMultiplier, 1f);
-
-            Outline runtimeTitleOutline = runtimeTitleText.GetComponent<Outline>();
-            if (runtimeTitleOutline == null)
-            {
-                runtimeTitleOutline = runtimeTitleText.gameObject.AddComponent<Outline>();
-            }
-            runtimeTitleOutline.effectColor = Color.black;
-            runtimeTitleOutline.effectDistance = new Vector2(3f, 3f);
-            runtimeTitleOutline.useGraphicAlpha = true;
-        }
-
-        private void ApplyRuntimeTitleStyle(Text targetText)
-        {
-            Text styleSource = currentLevelText != null ? currentLevelText : totalCoinsText;
-
-            if (styleSource != null)
-            {
-                targetText.font = styleSource.font;
-                targetText.fontStyle = styleSource.fontStyle;
-                targetText.color = styleSource.color;
-                targetText.lineSpacing = styleSource.lineSpacing;
-                targetText.supportRichText = styleSource.supportRichText;
-            }
-            else
-            {
-                targetText.color = Color.white;
-            }
-
-            targetText.alignment = TextAnchor.MiddleCenter;
-            targetText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            targetText.verticalOverflow = VerticalWrapMode.Overflow;
-            targetText.resizeTextForBestFit = true;
-            targetText.resizeTextMinSize = 24;
-            targetText.resizeTextMaxSize = 130;
-            targetText.raycastTarget = false;
-        }
-
-
         /// <summary>
         ////////////////////////////////////////////////// Public Functions
         /// </summary>
@@ -175,8 +77,6 @@ namespace ClawbearGames
 
         public override void OnShow()
         {
-            EnsureRuntimeTitle();
-
             MoveRectTransform(topPanelTrans, topPanelTrans.anchoredPosition, new Vector2(topPanelTrans.anchoredPosition.x, 0f), 0.5f);
             MoveRectTransform(bottomPanelTrans, bottomPanelTrans.anchoredPosition, new Vector2(bottomPanelTrans.anchoredPosition.x, 0f), 0.75f);
             ScaleRectTransform(gameNameTrans, Vector2.zero, Vector2.one, 1f);
