@@ -9,7 +9,6 @@ namespace ClawbearGames
         private const string exitFallbackLayerName = "Default";
 
         [Header("Target Object Configuration")]
-        [SerializeField] private float radiusIncreaseAmount = 0.1f;
         [SerializeField][Range(1, 50)] private int minCashRewardAmount = 1;
         [SerializeField][Range(1, 50)] private int maxCashRewardAmount = 1;
         [SerializeField][Range(0f, 1f)] private float cashRewardFrequency = 0.5f;
