@@ -9,6 +9,7 @@ namespace ClawbearGames
         private const string runtimeTitleObjectName = "RuntimeTitleText";
         private const string runtimeTitleTextValue = "Bomb Jumping";
         private const float runtimeTitleScaleMultiplier = 8f;
+        private const float runtimeTitleTopOffset = -90f;
 
         [SerializeField] private RectTransform topPanelTrans = null;
         [SerializeField] private RectTransform bottomPanelTrans = null;
@@ -120,7 +121,15 @@ namespace ClawbearGames
 
             ApplyRuntimeTitleStyle(runtimeTitleText);
             runtimeTitleText.text = runtimeTitleTextValue;
-            runtimeTitleText.rectTransform.localScale = new Vector3(runtimeTitleScaleMultiplier, runtimeTitleScaleMultiplier, 1f);
+            RectTransform runtimeTitleRect = runtimeTitleText.rectTransform;
+            float rectWidth = gameNameTrans.rect.width > 0f ? gameNameTrans.rect.width : 1024f;
+            float rectHeight = gameNameTrans.rect.height > 0f ? gameNameTrans.rect.height : 256f;
+            runtimeTitleRect.anchorMin = new Vector2(0.5f, 1f);
+            runtimeTitleRect.anchorMax = new Vector2(0.5f, 1f);
+            runtimeTitleRect.pivot = new Vector2(0.5f, 1f);
+            runtimeTitleRect.sizeDelta = new Vector2(rectWidth, rectHeight);
+            runtimeTitleRect.anchoredPosition = new Vector2(0f, runtimeTitleTopOffset);
+            runtimeTitleRect.localScale = new Vector3(runtimeTitleScaleMultiplier, runtimeTitleScaleMultiplier, 1f);
 
             Outline runtimeTitleOutline = runtimeTitleText.GetComponent<Outline>();
             if (runtimeTitleOutline == null)
