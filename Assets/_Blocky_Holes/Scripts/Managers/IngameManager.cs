@@ -84,6 +84,13 @@ namespace ClawbearGames
             TextAsset textAsset = Resources.Load<TextAsset>("Levels/" + CurrentLevel.ToString());
             levelData = JsonUtility.FromJson<LevelData>(textAsset.ToString());
 
+            // MVP pacing: keep the first level short and readable for core-loop validation.
+            if (CurrentLevel == 1)
+            {
+                levelData.TargetObjectAmount = Mathf.Min(levelData.TargetObjectAmount, 30);
+                levelData.TimeToCompleteLevel = 90;
+            }
+
             //Load other parameters
             groundMaterial.SetTexture("_Main_Texture", PoolManager.Instance.GetGroundTexture(levelData.GroundTexture));
             backgroundMusic = backgroundMusicClips[Random.Range(0, backgroundMusicClips.Length)];
