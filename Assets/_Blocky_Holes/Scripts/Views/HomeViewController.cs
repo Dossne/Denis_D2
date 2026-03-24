@@ -70,6 +70,20 @@ namespace ClawbearGames
             }
         }
 
+        private void HideGameNameImageIfExists()
+        {
+            if (gameNameTrans == null)
+            {
+                return;
+            }
+
+            Image gameNameImage = gameNameTrans.GetComponent<Image>();
+            if (gameNameImage != null)
+            {
+                gameNameImage.enabled = false;
+            }
+        }
+
         /// <summary>
         ////////////////////////////////////////////////// Public Functions
         /// </summary>
@@ -77,6 +91,8 @@ namespace ClawbearGames
 
         public override void OnShow()
         {
+            HideGameNameImageIfExists();
+
             MoveRectTransform(topPanelTrans, topPanelTrans.anchoredPosition, new Vector2(topPanelTrans.anchoredPosition.x, 0f), 0.5f);
             MoveRectTransform(bottomPanelTrans, bottomPanelTrans.anchoredPosition, new Vector2(bottomPanelTrans.anchoredPosition.x, 0f), 0.75f);
             ScaleRectTransform(gameNameTrans, Vector2.zero, Vector2.one, 1f);
