@@ -102,13 +102,13 @@ namespace ClawbearGames
                     GameObject runtimeTitleObject = new GameObject(runtimeTitleObjectName, typeof(RectTransform));
                     runtimeTitleObject.transform.SetParent(gameNameTrans, false);
 
-                    RectTransform runtimeTitleRect = runtimeTitleObject.GetComponent<RectTransform>();
-                    runtimeTitleRect.anchorMin = Vector2.zero;
-                    runtimeTitleRect.anchorMax = Vector2.one;
-                    runtimeTitleRect.offsetMin = Vector2.zero;
-                    runtimeTitleRect.offsetMax = Vector2.zero;
-                    runtimeTitleRect.localScale = Vector3.one;
-                    runtimeTitleRect.localPosition = Vector3.zero;
+                    RectTransform createdRuntimeTitleRect = runtimeTitleObject.GetComponent<RectTransform>();
+                    createdRuntimeTitleRect.anchorMin = Vector2.zero;
+                    createdRuntimeTitleRect.anchorMax = Vector2.one;
+                    createdRuntimeTitleRect.offsetMin = Vector2.zero;
+                    createdRuntimeTitleRect.offsetMax = Vector2.zero;
+                    createdRuntimeTitleRect.localScale = Vector3.one;
+                    createdRuntimeTitleRect.localPosition = Vector3.zero;
 
                     runtimeTitleText = runtimeTitleObject.AddComponent<Text>();
                 }
