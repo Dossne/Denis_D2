@@ -4,6 +4,8 @@ namespace ClawbearGames
 {
     public static class HoleVisualUtility
     {
+        public const float BlackApertureDiameterRatio = 0.60f;
+
         private static readonly string[] holeEffectNames = { "Sparks", "FireRising", "Smoke" };
         private static Sprite cachedReferenceHoleSprite = null;
 
@@ -100,6 +102,26 @@ namespace ClawbearGames
             Transform spriteTransform = holeSpriteRenderer.transform;
             Vector3 localPosition = spriteTransform.localPosition;
             spriteTransform.localPosition = new Vector3(0f, localPosition.y, 0f);
+        }
+
+        /// <summary>
+        /// Get black-aperture diameter in world units from the hole sprite bounds.
+        /// </summary>
+        /// <param name="holeSpriteRenderer"></param>
+        /// <param name="fallbackOuterDiameter"></param>
+        /// <returns></returns>
+        public static float GetBlackApertureDiameterWorld(SpriteRenderer holeSpriteRenderer, float fallbackOuterDiameter)
+        {
+            if (holeSpriteRenderer != null)
+            {
+                float outerDiameter = holeSpriteRenderer.bounds.size.x;
+                if (outerDiameter > Mathf.Epsilon)
+                {
+                    return outerDiameter * BlackApertureDiameterRatio;
+                }
+            }
+
+            return Mathf.Max(fallbackOuterDiameter * BlackApertureDiameterRatio, Mathf.Epsilon);
         }
 
         public static void ApplyReferenceVisual(Transform root, SpriteRenderer holeSpriteRenderer = null)

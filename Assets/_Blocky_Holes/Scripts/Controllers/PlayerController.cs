@@ -46,6 +46,7 @@ namespace ClawbearGames
         private float currentHoleSize = 1f;
         private float targetHoleSize = 1f;
         private float currentHoleDiameter = 1f;
+        private float absorbDiameterPerScale = 1f;
         private int currentHoleScore = 0;
         private int currentHoleLevel = HoleProgressionRules.MinHoleLevel;
         private float movementSpeed = 0f;
@@ -54,6 +55,7 @@ namespace ClawbearGames
 
         private const string objectFallbackLayerName = "Ignore Raycast";
         private const string defaultFallbackLayerName = "Default";
+        private const float overlapDetectionMargin = 0.05f;
 
         private void OnEnable()
         {
@@ -120,11 +122,10 @@ namespace ClawbearGames
                 Physics.IgnoreLayerCollision(objectLayerIndex, groundLayerIndex, true);
             }
 
-            //Initialize deterministic hole progression from README rules.
-            InitializeHoleProgression();
-
             //Apply unified hole visual and disable decorative hole effects.
             HoleVisualUtility.ApplyReferenceSprite(holeSpriteRenderer);
+            InitializeAbsorbDiameterPerScale();
+            InitializeHoleProgression();
             HoleVisualUtility.DisableHoleEffects(transform, holeFireEffects, fireEffectTrans);
             HoleVisualUtility.DisableHoleEffectsInScene();
 
@@ -153,18 +154,53 @@ namespace ClawbearGames
             return layerName;
         }
 
+        /// <summary>
+        /// Cache conversion ratio between hole scale and black-aperture diameter.
+        /// </summary>
+        private void InitializeAbsorbDiameterPerScale()
+        {
+            float currentScale = Mathf.Max(holeParentTrans.localScale.x, HoleProgressionRules.SizeEpsilon);
+            float blackApertureDiameter = HoleVisualUtility.GetBlackApertureDiameterWorld(holeSpriteRenderer, currentScale);
+            absorbDiameterPerScale = Mathf.Max(blackApertureDiameter / currentScale, HoleProgressionRules.SizeEpsilon);
+        }
+
+        private float ScaleToAbsorbDiameter(float holeScale)
+        {
+            return Mathf.Max(holeScale * absorbDiameterPerScale, HoleProgressionRules.SizeEpsilon);
+        }
+
+        private float AbsorbDiameterToScale(float absorbDiameter)
+        {
+            return Mathf.Max(absorbDiameter / absorbDiameterPerScale, HoleProgressionRules.SizeEpsilon);
+        }
+
+        private float GetHoleDetectionRadius()
+        {
+            if (holeSpriteRenderer != null)
+            {
+                float spriteOuterRadius = holeSpriteRenderer.bounds.extents.x;
+                if (spriteOuterRadius > HoleProgressionRules.SizeEpsilon)
+                {
+                    return spriteOuterRadius + overlapDetectionMargin;
+                }
+            }
+
+            return (currentHoleDiameter * 0.5f) + overlapDetectionMargin;
+        }
+
         private void InitializeHoleProgression()
         {
             float baseYScale = holeParentTrans.localScale.y;
-            baseHoleDiameter = Mathf.Max(holeParentTrans.localScale.x, HoleProgressionRules.SizeEpsilon);
+            float initialHoleScale = Mathf.Max(holeParentTrans.localScale.x, HoleProgressionRules.SizeEpsilon);
+            baseHoleDiameter = ScaleToAbsorbDiameter(initialHoleScale);
 
             currentHoleScore = 0;
             currentHoleLevel = HoleProgressionRules.MinHoleLevel;
             currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
 
-            targetHoleSize = currentHoleDiameter;
-            currentHoleSize = currentHoleDiameter;
-            holeParentTrans.localScale = new Vector3(currentHoleDiameter, baseYScale, currentHoleDiameter);
+            targetHoleSize = AbsorbDiameterToScale(currentHoleDiameter);
+            currentHoleSize = targetHoleSize;
+            holeParentTrans.localScale = new Vector3(currentHoleSize, baseYScale, currentHoleSize);
         }
 
         /// <summary>
@@ -197,16 +233,17 @@ namespace ClawbearGames
             float baseYScale = holeParentTrans.localScale.y;
             baseHoleDiameter = safeCalibratedDiameter;
             currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
+            float resolvedHoleScale = AbsorbDiameterToScale(currentHoleDiameter);
 
             if (currentHoleLevel == HoleProgressionRules.MinHoleLevel && currentHoleScore == 0)
             {
-                targetHoleSize = currentHoleDiameter;
-                currentHoleSize = currentHoleDiameter;
-                holeParentTrans.localScale = new Vector3(currentHoleDiameter, baseYScale, currentHoleDiameter);
+                targetHoleSize = resolvedHoleScale;
+                currentHoleSize = resolvedHoleScale;
+                holeParentTrans.localScale = new Vector3(currentHoleSize, baseYScale, currentHoleSize);
             }
             else
             {
-                targetHoleSize = Mathf.Max(targetHoleSize, currentHoleDiameter);
+                targetHoleSize = Mathf.Max(targetHoleSize, resolvedHoleScale);
             }
         }
 
@@ -244,7 +281,8 @@ namespace ClawbearGames
                     listDetectedTarget.Clear();
                     listDetectedDeadly.Clear();
                     Vector3 holeCenterPosition = GetHoleCenterWorldPosition();
-                    Collider[] delectedColliders = Physics.OverlapSphere(holeCenterPosition, targetHoleSize);
+                    float detectionRadius = GetHoleDetectionRadius();
+                    Collider[] delectedColliders = Physics.OverlapSphere(holeCenterPosition, detectionRadius);
                     foreach (Collider collider in delectedColliders)
                     {
                         if (collider.CompareTag("Object"))
@@ -293,8 +331,10 @@ namespace ClawbearGames
                     currentHoleSize = holeParentTrans.localScale.x;
                     if (currentHoleSize != targetHoleSize)
                     {
-                        currentHoleSize = Mathf.Clamp(currentHoleSize + Time.deltaTime, 1f, targetHoleSize);
-                        holeParentTrans.localScale = new Vector3(currentHoleSize, 1f, currentHoleSize);
+                        float minimumHoleScale = AbsorbDiameterToScale(baseHoleDiameter);
+                        float currentYScale = holeParentTrans.localScale.y;
+                        currentHoleSize = Mathf.Clamp(currentHoleSize + Time.deltaTime, minimumHoleScale, targetHoleSize);
+                        holeParentTrans.localScale = new Vector3(currentHoleSize, currentYScale, currentHoleSize);
                         CameraParentController.Instance.UpdateDistance(currentHoleSize);
                     }
                 }
@@ -398,7 +438,7 @@ namespace ClawbearGames
             {
                 currentHoleLevel = resolvedHoleLevel;
                 currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
-                targetHoleSize = currentHoleDiameter;
+                targetHoleSize = AbsorbDiameterToScale(currentHoleDiameter);
             }
         }
 
@@ -421,8 +461,10 @@ namespace ClawbearGames
         /// <param name="amount"></param>
         public void UpdateHoleSize(float amount)
         {
-            targetHoleSize = Mathf.Clamp(targetHoleSize + amount, baseHoleDiameter, 100f);
-            currentHoleDiameter = Mathf.Max(currentHoleDiameter, targetHoleSize);
+            float targetDiameter = ScaleToAbsorbDiameter(targetHoleSize);
+            targetDiameter = Mathf.Clamp(targetDiameter + amount, baseHoleDiameter, 100f);
+            targetHoleSize = AbsorbDiameterToScale(targetDiameter);
+            currentHoleDiameter = Mathf.Max(currentHoleDiameter, targetDiameter);
 
             if (holeFireEffects != null)
             {
