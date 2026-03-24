@@ -126,6 +126,7 @@ namespace ClawbearGames
             else
             {
                 ServicesManager.Instance.SoundManager.PlayMusic(backgroundMusic, 0.5f);
+                float minTargetObjectSize = float.MaxValue;
 
                 //Load target objects
                 foreach (TargetObjectData objectData in levelData.ListTargetObjectData)
@@ -136,6 +137,12 @@ namespace ClawbearGames
                     targetObject.transform.localScale = objectData.Scale;
                     targetObject.gameObject.SetActive(true);
                     ViewManager.Instance.IngameViewController.CreateTargetObjectDot(targetObject);
+                    minTargetObjectSize = Mathf.Min(minTargetObjectSize, targetObject.ObjectSize);
+                }
+
+                if (minTargetObjectSize < float.MaxValue)
+                {
+                    PlayerController.Instance.CalibrateBaseHoleDiameter(minTargetObjectSize);
                 }
 
 

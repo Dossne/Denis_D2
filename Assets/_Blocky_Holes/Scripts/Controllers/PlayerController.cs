@@ -167,6 +167,35 @@ namespace ClawbearGames
             holeParentTrans.localScale = new Vector3(currentHoleDiameter, baseYScale, currentHoleDiameter);
         }
 
+        /// <summary>
+        /// Calibrate the base hole diameter to ensure first-tier objects are absorbable.
+        /// This should be called right after level objects are spawned.
+        /// </summary>
+        /// <param name="calibratedBaseDiameter"></param>
+        public void CalibrateBaseHoleDiameter(float calibratedBaseDiameter)
+        {
+            float safeCalibratedDiameter = Mathf.Max(calibratedBaseDiameter, HoleProgressionRules.SizeEpsilon);
+            if (safeCalibratedDiameter <= baseHoleDiameter + HoleProgressionRules.SizeEpsilon)
+            {
+                return;
+            }
+
+            float baseYScale = holeParentTrans.localScale.y;
+            baseHoleDiameter = safeCalibratedDiameter;
+            currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
+
+            if (currentHoleLevel == HoleProgressionRules.MinHoleLevel && currentHoleScore == 0)
+            {
+                targetHoleSize = currentHoleDiameter;
+                currentHoleSize = currentHoleDiameter;
+                holeParentTrans.localScale = new Vector3(currentHoleDiameter, baseYScale, currentHoleDiameter);
+            }
+            else
+            {
+                targetHoleSize = Mathf.Max(targetHoleSize, currentHoleDiameter);
+            }
+        }
+
         private void Update()
         {
             if (playerState == PlayerState.Player_Living)
