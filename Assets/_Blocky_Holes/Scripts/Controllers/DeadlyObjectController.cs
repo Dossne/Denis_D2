@@ -6,8 +6,13 @@ namespace ClawbearGames
 {
     public class DeadlyObjectController : MonoBehaviour
     {
+        private const string autoJumpObjectName = "Deadly_Object_1";
         private const string enterFallbackLayerName = "Ignore Raycast";
         private const string exitFallbackLayerName = "Default";
+        private const float autoJumpInterval = 1f;
+        private const float jumpForwardDistanceMultiplier = 1.5f;
+        private const float gravityFallback = 9.81f;
+        private const float physicsEpsilon = 0.0001f;
 
         [Header("Deadly Object References")]
         [SerializeField] private string objectName = string.Empty;
@@ -34,12 +39,14 @@ namespace ClawbearGames
             }
         }
         private Coroutine cRCheckFall = null;
+        private Coroutine cRAutoJump = null;
         private int physicsPullCount = 0;
         private bool isBeingConsumed = false;
 
         private void OnEnable()
         {
             cRCheckFall = null;
+            cRAutoJump = null;
             physicsPullCount = 0;
             isBeingConsumed = false;
 
@@ -49,6 +56,17 @@ namespace ClawbearGames
             }
 
             SetLayerSafe(exitFallbackLayerName, exitFallbackLayerName);
+
+            if (IsAutoJumpEnabled())
+            {
+                cRAutoJump = StartCoroutine(CRAutoJumpTowardHole());
+            }
+        }
+
+        private void OnDisable()
+        {
+            StopAutoJump();
+            cRCheckFall = null;
         }
 
 
@@ -59,6 +77,7 @@ namespace ClawbearGames
         public void OnEnterPlayer(string objectLayer)
         {
             isBeingConsumed = true;
+            StopAutoJump();
             SetLayerSafe(objectLayer, enterFallbackLayerName);
             rigidbody3D.detectCollisions = false;
             rigidbody3D.WakeUp();
@@ -120,6 +139,82 @@ namespace ClawbearGames
             {
                 gameObject.layer = fallbackLayerIndex;
             }
+        }
+
+        private bool IsAutoJumpEnabled()
+        {
+            return string.Equals(objectName, autoJumpObjectName, System.StringComparison.Ordinal);
+        }
+
+        private bool CanExecuteAutoJump()
+        {
+            if (isBeingConsumed || rigidbody3D == null || rigidbody3D.isKinematic)
+            {
+                return false;
+            }
+
+            if (!gameObject.activeInHierarchy || PlayerController.Instance == null || IngameManager.Instance == null)
+            {
+                return false;
+            }
+
+            return IngameManager.Instance.IngameState == IngameState.Ingame_Playing;
+        }
+
+        private void StopAutoJump()
+        {
+            if (cRAutoJump != null)
+            {
+                StopCoroutine(cRAutoJump);
+                cRAutoJump = null;
+            }
+        }
+
+        private IEnumerator CRAutoJumpTowardHole()
+        {
+            WaitForSeconds wait = new WaitForSeconds(autoJumpInterval);
+            while (gameObject.activeInHierarchy)
+            {
+                yield return wait;
+
+                if (!CanExecuteAutoJump())
+                {
+                    continue;
+                }
+
+                ExecuteJumpTowardHole();
+            }
+        }
+
+        private void ExecuteJumpTowardHole()
+        {
+            float diameter = Mathf.Max(ObjectSize, physicsEpsilon);
+            float jumpHeight = diameter;
+            float forwardDistance = jumpForwardDistanceMultiplier * diameter;
+
+            Vector3 holeCenter = PlayerController.Instance.HoleCenterWorldPosition;
+            Vector3 toHole = holeCenter - transform.position;
+            Vector3 dirXZ = new Vector3(toHole.x, 0f, toHole.z);
+            if (dirXZ.sqrMagnitude > physicsEpsilon)
+            {
+                dirXZ.Normalize();
+            }
+            else
+            {
+                dirXZ = Vector3.zero;
+            }
+
+            float g = Mathf.Abs(Physics.gravity.y);
+            if (g < physicsEpsilon)
+            {
+                g = gravityFallback;
+            }
+
+            float vy = Mathf.Sqrt(2f * g * jumpHeight);
+            float flightTime = Mathf.Max((2f * vy) / g, physicsEpsilon);
+            float vxz = forwardDistance / flightTime;
+
+            rigidbody3D.velocity = (dirXZ * vxz) + (Vector3.up * vy);
         }
 
 
