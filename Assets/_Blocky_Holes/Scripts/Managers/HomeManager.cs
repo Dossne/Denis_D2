@@ -41,9 +41,10 @@ namespace ClawbearGames
             Application.targetFrameRate = 60;
             ViewManager.Instance.OnShowView(ViewType.HOME_VIEW);
 
-            //Setup character
-            CharacterInforController charControl = ServicesManager.Instance.CharacterContainer.CharacterInforControllers[ServicesManager.Instance.CharacterContainer.SelectedCharacterIndex];
-            holeSpriteRenderer.sprite = charControl.HoleSprite;
+            //Use a single reference-style hole visual for MVP.
+            HoleVisualUtility.ApplyReferenceSprite(holeSpriteRenderer);
+            HoleVisualUtility.DisableHoleEffectsInScene();
+            HoleVisualUtility.DisableHoleEffects(transform);
         }
     }
 }

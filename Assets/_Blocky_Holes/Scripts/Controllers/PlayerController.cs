@@ -116,11 +116,10 @@ namespace ClawbearGames
                 Physics.IgnoreLayerCollision(objectLayerIndex, groundLayerIndex, true);
             }
 
-            //Add other actions here
-
-            //Setup character
-            CharacterInforController charControl = ServicesManager.Instance.CharacterContainer.CharacterInforControllers[ServicesManager.Instance.CharacterContainer.SelectedCharacterIndex];
-            holeSpriteRenderer.sprite = charControl.HoleSprite;
+            //Apply unified hole visual and disable decorative hole effects.
+            HoleVisualUtility.ApplyReferenceSprite(holeSpriteRenderer);
+            HoleVisualUtility.DisableHoleEffects(transform, holeFireEffects, fireEffectTrans);
+            HoleVisualUtility.DisableHoleEffectsInScene();
 
             //Setup parameters and objects
             isStopControl = true;
@@ -322,40 +321,52 @@ namespace ClawbearGames
         {
             targetHoleSize = Mathf.Clamp(targetHoleSize + amount, 1f, 100f);
 
-            for(int i = 0; i < holeFireEffects.Length; i++)
+            if (holeFireEffects != null)
             {
-                //Adjust lifetime
-                var main = holeFireEffects[i].main;
-                main.startLifetime = new ParticleSystem.MinMaxCurve(targetHoleSize / 2f, targetHoleSize);
-
-                //Adjust redius
-                var shape = holeFireEffects[i].shape;
-                shape.radius = targetHoleSize * 0.6f;
-
-                //Adjust emission count
-                var parEmission = holeFireEffects[i].emission;
-                parEmission.rateOverTime = Mathf.RoundToInt(targetHoleSize * 30f);
-
-                //Adjust size
-                if (i == 0)
+                for(int i = 0; i < holeFireEffects.Length; i++)
                 {
-                    main.startSize3D = true;
-                    main.startSizeX = targetHoleSize * 3f;
-                    main.startSizeY = targetHoleSize * 3f;
-                    main.startSizeZ = targetHoleSize * 4f;
-                }
-                else if (i == 1)
-                {
-                    main.startSize = targetHoleSize * 0.1f;
-                }
-                else
-                {
-                    main.startSize = new ParticleSystem.MinMaxCurve(targetHoleSize, targetHoleSize * 3f);
+                    ParticleSystem holeEffect = holeFireEffects[i];
+                    if (holeEffect == null || !holeEffect.gameObject.activeInHierarchy)
+                    {
+                        continue;
+                    }
+
+                    //Adjust lifetime
+                    var main = holeEffect.main;
+                    main.startLifetime = new ParticleSystem.MinMaxCurve(targetHoleSize / 2f, targetHoleSize);
+
+                    //Adjust redius
+                    var shape = holeEffect.shape;
+                    shape.radius = targetHoleSize * 0.6f;
+
+                    //Adjust emission count
+                    var parEmission = holeEffect.emission;
+                    parEmission.rateOverTime = Mathf.RoundToInt(targetHoleSize * 30f);
+
+                    //Adjust size
+                    if (i == 0)
+                    {
+                        main.startSize3D = true;
+                        main.startSizeX = targetHoleSize * 3f;
+                        main.startSizeY = targetHoleSize * 3f;
+                        main.startSizeZ = targetHoleSize * 4f;
+                    }
+                    else if (i == 1)
+                    {
+                        main.startSize = targetHoleSize * 0.1f;
+                    }
+                    else
+                    {
+                        main.startSize = new ParticleSystem.MinMaxCurve(targetHoleSize, targetHoleSize * 3f);
+                    }
                 }
             }
 
-            float newY = -(targetHoleSize * 1.8f);
-            fireEffectTrans.localPosition = new Vector3(fireEffectTrans.localPosition.x, newY, fireEffectTrans.localPosition.z);
+            if (fireEffectTrans != null && fireEffectTrans.gameObject.activeInHierarchy)
+            {
+                float newY = -(targetHoleSize * 1.8f);
+                fireEffectTrans.localPosition = new Vector3(fireEffectTrans.localPosition.x, newY, fireEffectTrans.localPosition.z);
+            }
 
             //Create effect
             EffectManager.Instance.CreateTargetObjectExplode(transform.position + Vector3.up * 0.15f, currentHoleSize);

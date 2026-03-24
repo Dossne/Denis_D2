@@ -46,8 +46,11 @@ namespace ClawbearGames
                 characterInfor.SetSequenceNumber(i);
                 characterInfor.transform.localScale = Vector3.one;
                 characterInfor.transform.position = new Vector3(0, 0, skinIndex * characterSpace);
+                HoleVisualUtility.ApplyReferenceVisual(characterInfor.transform);
                 listCharacterInforController.Add(characterInfor);
             }
+
+            HoleVisualUtility.DisableHoleEffectsInScene();
 
             //Rotate and scale the current CharacterInforController object
             currentCharacterController = listCharacterInforController[currentCharacterIndex];
