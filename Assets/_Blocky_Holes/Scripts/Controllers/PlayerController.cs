@@ -42,8 +42,12 @@ namespace ClawbearGames
         private List<TargetObjectController> listDetectedTarget = new List<TargetObjectController>();
         private List<DeadlyObjectController> listDetectedDeadly = new List<DeadlyObjectController>();
         private Vector3 firstInputPos = Vector3.zero;
+        private float baseHoleDiameter = 1f;
         private float currentHoleSize = 1f;
         private float targetHoleSize = 1f;
+        private float currentHoleDiameter = 1f;
+        private int currentHoleScore = 0;
+        private int currentHoleLevel = HoleProgressionRules.MinHoleLevel;
         private float movementSpeed = 0f;
         private float currentSpeed = 0f;
         private bool isStopControl = false;
@@ -116,6 +120,9 @@ namespace ClawbearGames
                 Physics.IgnoreLayerCollision(objectLayerIndex, groundLayerIndex, true);
             }
 
+            //Initialize deterministic hole progression from README rules.
+            InitializeHoleProgression();
+
             //Apply unified hole visual and disable decorative hole effects.
             HoleVisualUtility.ApplyReferenceSprite(holeSpriteRenderer);
             HoleVisualUtility.DisableHoleEffects(transform, holeFireEffects, fireEffectTrans);
@@ -144,6 +151,20 @@ namespace ClawbearGames
             }
 
             return layerName;
+        }
+
+        private void InitializeHoleProgression()
+        {
+            float baseYScale = holeParentTrans.localScale.y;
+            baseHoleDiameter = Mathf.Max(holeParentTrans.localScale.x, HoleProgressionRules.SizeEpsilon);
+
+            currentHoleScore = 0;
+            currentHoleLevel = HoleProgressionRules.MinHoleLevel;
+            currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
+
+            targetHoleSize = currentHoleDiameter;
+            currentHoleSize = currentHoleDiameter;
+            holeParentTrans.localScale = new Vector3(currentHoleDiameter, baseYScale, currentHoleDiameter);
         }
 
         private void Update()
@@ -185,7 +206,9 @@ namespace ClawbearGames
                         if (collider.CompareTag("Object"))
                         {
                             TargetObjectController targetObject = PoolManager.Instance.FindTargetObject(collider.transform);
-                            if (targetObject != null && !listDetectedTarget.Contains(targetObject))
+                            if (targetObject != null
+                                && !listDetectedTarget.Contains(targetObject)
+                                && CanAbsorbObject(targetObject.ObjectSize))
                             {
                                 listDetectedTarget.Add(targetObject);
                                 targetObject.OnEnterPlayer(objectLayer);
@@ -193,7 +216,9 @@ namespace ClawbearGames
                             }
 
                             DeadlyObjectController deadlyObject = PoolManager.Instance.FindDeadlyObject(collider.transform);
-                            if(deadlyObject != null && !listDetectedDeadly.Contains(deadlyObject))
+                            if(deadlyObject != null
+                                && !listDetectedDeadly.Contains(deadlyObject)
+                                && CanAbsorbObject(deadlyObject.ObjectSize))
                             {
                                 listDetectedDeadly.Add(deadlyObject);
                                 deadlyObject.OnEnterPlayer(objectLayer);
@@ -303,6 +328,39 @@ namespace ClawbearGames
 
 
         /// <summary>
+        /// Determine whether the current hole size can absorb an object by physical size.
+        /// </summary>
+        /// <param name="objectSize"></param>
+        /// <returns></returns>
+        public bool CanAbsorbObject(float objectSize)
+        {
+            return objectSize <= currentHoleDiameter + HoleProgressionRules.SizeEpsilon;
+        }
+
+
+
+        /// <summary>
+        /// Register one collected target object and update hole growth by score thresholds.
+        /// </summary>
+        /// <param name="objectSize"></param>
+        public void RegisterCollectedTarget(float objectSize)
+        {
+            int itemTier = HoleProgressionRules.GetItemTierBySize(objectSize, baseHoleDiameter);
+            int earnedPoints = HoleProgressionRules.GetPointsForItemTier(itemTier);
+            currentHoleScore += earnedPoints;
+
+            int resolvedHoleLevel = HoleProgressionRules.GetHoleLevelByScore(currentHoleScore);
+            if (resolvedHoleLevel > currentHoleLevel)
+            {
+                currentHoleLevel = resolvedHoleLevel;
+                currentHoleDiameter = HoleProgressionRules.GetHoleDiameter(baseHoleDiameter, currentHoleLevel);
+                targetHoleSize = currentHoleDiameter;
+            }
+        }
+
+
+
+        /// <summary>
         /// Set the movement speed for the player.
         /// </summary>
         /// <param name="speed"></param>
@@ -319,7 +377,8 @@ namespace ClawbearGames
         /// <param name="amount"></param>
         public void UpdateHoleSize(float amount)
         {
-            targetHoleSize = Mathf.Clamp(targetHoleSize + amount, 1f, 100f);
+            targetHoleSize = Mathf.Clamp(targetHoleSize + amount, baseHoleDiameter, 100f);
+            currentHoleDiameter = Mathf.Max(currentHoleDiameter, targetHoleSize);
 
             if (holeFireEffects != null)
             {

@@ -112,7 +112,7 @@ namespace ClawbearGames
 
                     //Update the player
                     ServicesManager.Instance.SoundManager.PlaySound(ServicesManager.Instance.SoundManager.TargetObjectDestroyed);
-                    PlayerController.Instance.UpdateHoleSize(radiusIncreaseAmount);
+                    PlayerController.Instance.RegisterCollectedTarget(ObjectSize);
                     ViewManager.Instance.IngameViewController.RemoveTargetObjectDot(this);
                     IngameManager.Instance.OnPlayerAteTargetObject();
 
