@@ -188,6 +188,11 @@ namespace ClawbearGames
             return (currentHoleDiameter * 0.5f) + overlapDetectionMargin;
         }
 
+        private float GetHoleRadius()
+        {
+            return currentHoleDiameter * 0.5f;
+        }
+
         private void InitializeHoleProgression()
         {
             float baseYScale = holeParentTrans.localScale.y;
@@ -215,6 +220,24 @@ namespace ClawbearGames
             }
 
             return transform.position;
+        }
+
+        private bool IsObjectFullyInsideAperture(Vector3 objectCenter, float objectSize)
+        {
+            float objectRadius = Mathf.Max(objectSize * 0.5f, HoleProgressionRules.SizeEpsilon);
+            float holeRadius = GetHoleRadius();
+
+            Vector3 holeCenter = GetHoleCenterWorldPosition();
+            float deltaX = objectCenter.x - holeCenter.x;
+            float deltaZ = objectCenter.z - holeCenter.z;
+            float distanceXZ = Mathf.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ));
+
+            return distanceXZ + objectRadius <= holeRadius + HoleProgressionRules.SizeEpsilon;
+        }
+
+        private bool CanStartAbsorbObject(Vector3 objectCenter, float objectSize)
+        {
+            return CanAbsorbObject(objectSize) && IsObjectFullyInsideAperture(objectCenter, objectSize);
         }
 
         /// <summary>
@@ -290,7 +313,7 @@ namespace ClawbearGames
                             TargetObjectController targetObject = PoolManager.Instance.FindTargetObject(collider.transform);
                             if (targetObject != null
                                 && !listDetectedTarget.Contains(targetObject)
-                                && CanAbsorbObject(targetObject.ObjectSize))
+                                && CanStartAbsorbObject(targetObject.ObjectCenterPosition, targetObject.ObjectSize))
                             {
                                 listDetectedTarget.Add(targetObject);
                                 targetObject.OnEnterPlayer(objectLayer);
@@ -300,7 +323,7 @@ namespace ClawbearGames
                             DeadlyObjectController deadlyObject = PoolManager.Instance.FindDeadlyObject(collider.transform);
                             if(deadlyObject != null
                                 && !listDetectedDeadly.Contains(deadlyObject)
-                                && CanAbsorbObject(deadlyObject.ObjectSize))
+                                && CanStartAbsorbObject(deadlyObject.ObjectCenterPosition, deadlyObject.ObjectSize))
                             {
                                 listDetectedDeadly.Add(deadlyObject);
                                 deadlyObject.OnEnterPlayer(objectLayer);
@@ -420,6 +443,12 @@ namespace ClawbearGames
         {
             return objectSize <= currentHoleDiameter + HoleProgressionRules.SizeEpsilon;
         }
+
+
+        /// <summary>
+        /// Read-only world-space center of the black hole aperture.
+        /// </summary>
+        public Vector3 HoleCenterWorldPosition => GetHoleCenterWorldPosition();
 
 
 

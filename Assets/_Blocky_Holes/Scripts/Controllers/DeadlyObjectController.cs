@@ -16,13 +16,21 @@ namespace ClawbearGames
 
 
         public string ObjectName => objectName;
+        public Vector3 ObjectCenterPosition => meshRenderer != null ? meshRenderer.bounds.center : transform.position;
         public float ObjectSize
         {
             get
             {
-                if (meshRenderer.bounds.size.x > meshRenderer.bounds.size.z)
-                    return meshRenderer.bounds.size.x;
-                else return meshRenderer.bounds.size.z;
+                if (meshRenderer == null)
+                {
+                    return 0f;
+                }
+
+                Vector3 localSize = meshRenderer.localBounds.size;
+                Vector3 lossyScale = transform.lossyScale;
+                float sizeX = localSize.x * Mathf.Abs(lossyScale.x);
+                float sizeZ = localSize.z * Mathf.Abs(lossyScale.z);
+                return Mathf.Max(sizeX, sizeZ);
             }
         }
         private Coroutine cRCheckFall = null;
@@ -60,7 +68,10 @@ namespace ClawbearGames
                 physicsPullCount++;
 
                 //Pull this target object toward the center of the player
-                Vector3 pullDir = (PlayerController.Instance.transform.position - transform.position).normalized;
+                Vector3 holeCenter = PlayerController.Instance != null
+                    ? PlayerController.Instance.HoleCenterWorldPosition
+                    : transform.position;
+                Vector3 pullDir = (holeCenter - transform.position).normalized;
                 rigidbody3D.AddForce(pullDir * 10f);
             }
 
